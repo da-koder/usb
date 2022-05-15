@@ -19,7 +19,7 @@ pub const DeviceHandle = opaque {
     }
         
     // extern fn libusb_get_bos_descriptor(dev_handle: *DeviceHandle, bos: *?*BOS.Descriptor) c_int;
-    pub fn getBosDescriptor(dev_handle: *DeviceHandle, bos: *?) !*BOS.Descriptor {
+    pub fn getBosDescriptor(dev_handle: *DeviceHandle) !*BOS.Descriptor {
         var bos: ?*BOS.Descriptor = undefined;
         var res = libusb_get_bos_descriptor(dev_handle, &bos);
         return if ( res < 0 ) toError(-res)
