@@ -14,7 +14,7 @@
 const struct_timeval = @cImport(@cInclude("sys/time.h")).struct_timeval;
 const std = @import("std");
 
-const Device = extern struct {};
+const Device = @import("libusb/device.zig").Device;
 
 inline fn toError(err: c_int) anyerror{
     return @intToError(@bitCast(u16, @truncate(i16, err)));
@@ -43,15 +43,15 @@ pub const Context = opaque {
     //     libusb_set_log_cb(ctx, cb, @enumToInt(mode));
     // }
 
-// extern fn libusb_get_device_list(ctx: *Context, list: [*c][*c]?Device) isize
-    // pub fn getDeviceList(ctx: *Context) ![]*Device {
-    //     var optional_arr: ?[*]*Device = null;
-    //     var res = libusb_get_device_list(ctx, &optional_arr);
-    //     if (optional_arr) |arr|
-    //         return if (res >= 0) arr[0..res] else toError-(-res)
-    //     else
-    //         return error.NULL_DEVICELIST;
-    // }
+// extern fn libusb_get_device_list(ctx: *Context, list: *?[*]?*Device) isize
+    pub fn getDeviceList(ctx: *Context) ![]?*Device {
+        var optional_arr: ?[*:null]?*Device = null;
+        var res = libusb_get_device_list(ctx, &optional_arr);
+        if (optional_arr) |arr|
+            return if (res >= 0) arr[0..res] else toError-(-res)
+        else
+            return error.NULL_DEVICELIST;
+    }
     
 //     extern fn libusb_get_port_path(ctx: *Context, dev: ?Device, path: [*c]u8, path_length: u8) c_int
     //const getPortPath(ctx: *Context, dev: ?Device, path: [*c]u8, path_length: u8)  = libusb_get_port_path;
@@ -239,7 +239,7 @@ extern fn libusb_init(*?*Context) c_int;
 
 extern fn libusb_exit(*Context) void;
 
-// extern fn libusb_get_device_list(ctx: *Context, list: [*c][*c]?Device) isize;
+extern fn libusb_get_device_list(ctx: *Context, list: *?[*]?*Device) isize;
 
 // extern fn libusb_get_port_path(ctx: *Context, dev: ?Device, path: [*c]u8, path_length: u8) c_int;
 

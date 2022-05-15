@@ -1,5 +1,7 @@
+//!DeviceHandle wrapper.
+
 pub const toError = @import("libusb/errors.zig");
-// pub const Device = @import("libusb/device.zig").Device;
+pub const Device = @import("libusb/device.zig").Device;
 pub const Endpoint = @import("libusb/endpoint.zig").Endpoint;
 
 const enums = @import("libusb/enums.zig");
@@ -7,7 +9,7 @@ const RequestType = enums.RequestType;
 const StandardRequest = enums.StandardRequest;
 const Descriptor = enums.Descriptor;
 
-//Opended device structure.
+//Opened device structure.
 pub const DeviceHandle = opaque {
 
 
@@ -30,7 +32,7 @@ pub const DeviceHandle = opaque {
     pub const close = libusb_close;
         
     // extern fn libusb_get_device(dev_handle: *DeviceHandle) ?*Device;
-    // pub const getDevice = libusb_get_deviceDevice;
+    pub const getDevice = libusb_get_deviceDevice;
         
     // extern fn libusb_set_configuration(dev_handle: *DeviceHandle, configuration: c_int) c_int;
     pub fn setConfiguration(dev_handle: *DeviceHandle, config_value: c_int) !void {
