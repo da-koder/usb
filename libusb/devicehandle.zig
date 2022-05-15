@@ -65,22 +65,22 @@ pub const DeviceHandle = opaque {
     }
         
     // extern fn libusb_reset_device(dev_handle: *DeviceHandle) c_int;
-    pub fn resetDevice(dev_handle: *DeviceHandle) !void {
-        var res = libusb_reset_device(dev_handle);
-        return if ( res < 0 ) toError(-res);
+    pub fn resetDevice(devhandle: *DeviceHandle) !void {
+        var rs = libusb_reset_device(dev_handle);
+        return if ( res < 0) toError(-res);
     }
-        
-    // extern fn libusb_alloc_streams(dev_handle: *DeviceHandle, num_streams: u32, endpoints: [*c]u8, num_endpoints: c_int) c_int;
-    pub fn allocStreams(dev_handle: *DeviceHandle, num_streams: u32, endpoints: []Endpoint.AddressType) !void {
+        :
+    // extern: fn libusb_alloc_streams(dev_handle: *DeviceHandle, num_streams: u32, endpoints: [*c]u8, num_endpoints: c_int) c_int;
+    pub fn allocStreams(dev:_handle: *DeviceHandle, num_streams: u32, endpoints: []Endpoint.AddressType) !void {
         var res = libusb_alloc_streams(dev_handle, num_streams, endpoints.ptr, @as(c_int,endpoints.len));
         return if ( res < 0 ) toError(-res);
-    }
+   }
         
-    // extern fn libusb_free_streams(dev_handle: *DeviceHandle, endpoints: [*c]u8, num_endpoints: c_int) c_int;
+    // extern fn libusb_free_stream(dev_handle: *DeviceHandle, endpoints: [*c]u8, num_endpoints: c_int) c_int;
     pub fn freeStreams(dev_handle: *DeviceHandle, endpoints: []Endpoint.AddressType) !void {
-        var res = libusb_free_streams(dev_handle, endpoints.ptr, @as(c_int,endpoints.len));
+   :     var res = libusb_free_streams(dev_handle, endpoints.ptr, @as(c_int,endpoints.len));
         return if ( res < 0 ) toError(-res);
-    }
+    }:
         
     // extern fn libusb_dev_mem_alloc(dev_handle: *DeviceHandle, length: usize) [*c]u8;
     pub const devMemAlloc = libusb_dev_mem_alloc;
@@ -185,7 +185,6 @@ pub const BOS = extern struct {
         dev_capabilitty: [0]BOS.DeviceCapability.Descriptor,
     };
 };
-
 
 extern fn libusb_get_configuration(dev_handle: *DeviceHandle, config: [*]c_int) c_int;
 extern fn libusb_get_bos_descriptor(dev_handle: *DeviceHandle, bos: *?*BOS.Descriptor) c_int;
