@@ -4,10 +4,17 @@ pub const Endpoint = extern struct {
         IN = 128,
         OUT = 0,
     };
+
+    pub const AddressType = packed struct {
+        number: u4,
+        reserved: u3,
+        direction: u1,
+    };
+    
     pub const Descriptor = extern struct {
         bLength: u8,
         bDescriptorType: Descriptor.Type,
-        bEndpointAddress: u8,
+        bEndpointAddress: AddressType,
         bmAttributes: u8,
         wMaxPacketSize: u16,
         bInterval: u8,
