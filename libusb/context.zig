@@ -14,13 +14,14 @@
 const struct_timeval = @cImport(@cInclude("sys/time.h")).struct_timeval;
 const std = @import("std");
 
-const Device = @import("libusb/device.zig").Device;
+const Device = @import("device.zig").Device;
+const DeviceHandle = @import("devicehandle.zig").DeviceHandle;
 
 inline fn toError(err: c_int) anyerror{
     return @intToError(@bitCast(u16, @truncate(i16, err)));
 }
 
-const DeviceList = [:null]?*Device;
+const DeviceArray = [*]*Device;
 
 pub const Context = opaque {
 
@@ -46,16 +47,14 @@ pub const Context = opaque {
     // }
 
 // extern fn libusb_get_device_list(ctx: *Context, list: *?[*]?*Device) isize
-    pub fn getDeviceList(ctx: *Context) !DeviceList{
-        var optional_arr: ?DeviceList = null;
-        var res = libusb_get_device_list(ctx, &optional_arr);
-        if (optional_arr) |arr|
-            return if (res >= 0) arr[0..res] else toError-(-res)
-        else
-            return error.NULL_DEVICELIST;
+    pub fn getDeviceArray(ctx: *Context) ![]*Device {
+        var arr: DeviceArray = undefined;
+        var res = libusb_get_device_list(ctx, &arr);
+        var slice: []*Device = arr[0..@bitCast(usize,res)];
+        return if (res >= 0) slice else toError(-@truncate(c_int,res));
     }
 
-    pub fn freeDeviceList(list: DeviceList) void {
+    pub fn freeDeviceArray(list: []*Device) void {
         libusb_free_device_list(list.ptr, 1);
     }
 //     extern fn libusb_get_port_path(ctx: *Context, dev: ?Device, path: [*c]u8, path_length: u8) c_int
@@ -66,10 +65,10 @@ pub const Context = opaque {
     //     return if (res < 0) toError(-res) else res;
     // }
     
-    // pub fn openDeviceWithVidPid(ctx: *Context, vendor_id: u16, product_id: u16) !DeviceHandle {
-    //     var dev_handle = libusb_open_device_with_vid_pid(ctx, vendor_id, product_id);
-    //     return if (dev_handle) dev_handle else error.OpenError;
-    // }
+    pub fn openDeviceWithVidPid(ctx: *Context, vendor_id: u16, product_id: u16) !*DeviceHandle {
+        var optional_dev_handle = libusb_open_device_with_vid_pid(ctx, vendor_id, product_id);
+        return if (optional_dev_handle) |dev_handle| dev_handle else error.OpenError;
+    }
     
     // pub extern fn libusb_free_pollfds(pollfds: [*c][*c]const PollFd) void;
     pub fn freePollFds(ctx: *Context, pollfds: [*:null]?*PollFd) void {
@@ -244,15 +243,17 @@ extern fn libusb_init(*?*Context) c_int;
 
 extern fn libusb_exit(*Context) void;
 
-extern fn libusb_get_device_list(ctx: *Context, list: *?[*]?*Device) isize;
+extern fn libusb_get_device_list(ctx: *Context, list: *DeviceArray) isize;
 
-extern fn libusb_free_device_list(list: [*:null]?*Device, unref: c_int) void;
+extern fn libusb_free_device_list(list: DeviceArray, unref: c_int) void;
 
 // extern fn libusb_get_port_path(ctx: *Context, dev: ?Device, path: [*c]u8, path_length: u8) c_int;
 
 // extern fn libusb_wrap_sys_device(*Context, isize, **DeviceHandle) c_int;
 
 // extern fn libusb_open(*Device, **DeviceHandle) c_int;
+
+extern fn libusb_open_device_with_vid_pid(*Context, u16, u16) ?*DeviceHandle;
 
 extern fn libusb_set_debug(*Context, Log.Level) anyopaque;
 

@@ -2,6 +2,7 @@
 const libusb = @import("libusb.zig");
 const std = @import("std");
 const print = std.debug.print;
+const assert = std.debug.assert;
 
 test "Initialization" {
     if (libusb.Context.init()) |ctx| {
@@ -33,6 +34,18 @@ test "Info level debug" {
     }
 }
 
+test "Device Array" {
+    if (libusb.Context.init()) |ctx| {
+        defer ctx.deinit();
+        print("Inside Info level.\n", .{});
+        ctx.setLogCb(log, libusb.Log.CallBack.Mode.CONTEXT);
+        ctx.setOption(libusb.Option.LOG_LEVEL, .{libusb.Log.Level.INFO}) catch |err| print("setOption failed: {s}.\n", .{@errorName(err)});
 
-
+        var dev_list = ctx.getDeviceArray() catch |err| print("getDeviceArray failed: {s}", .{@errorName(err)});
+        defer libusb.Context.freeDeviceArray(dev_list);
+        assert(dev_list.len > 0);
+    } else |err| {
+        print("Error occured: {s}", .{@errorName(err)});
+    }
+}
 
