@@ -1,4 +1,4 @@
-pub const ClassCode = enum(c_int) {
+pub const ClassCode = enum(u8) {
     PER_INTERFACE = 0,
     AUDIO = 1,
     COMM = 2,
@@ -19,12 +19,11 @@ pub const ClassCode = enum(c_int) {
     VENDOR_SPEC = 255,
 };
 
-pub const TransferType = enum(c_int) {
+pub const TransferType = enum(u2) {
     CONTROL = 0,
     ISOCHRONOUS = 1,
     BULK = 2,
     INTERRUPT = 3,
-    BULK_STREAM = 4,
 };
 
 pub const StandardRequest = enum(c_int) {
@@ -57,14 +56,14 @@ pub const RequestRecipient = enum(c_int) {
     OTHER = 3,
 };
 
-pub const IsoSyncType = enum(c_int) {
+pub const IsoSyncType = enum(u2) {
     NONE = 0,
     ASYNC = 1,
     ADAPTIVE = 2,
     SYNC = 3,
 };
 
-pub const IsoUsageType = enum(c_int) {
+pub const IsoUsageType = enum(u2) {
     DATA = 0,
     FEEDBACK = 1,
     IMPLICIT = 2,
@@ -89,3 +88,9 @@ pub const Descriptor = extern struct {
     };
 };
 
+pub const Capability = enum(u32) {
+    CAPABILITY = 0x0000,
+    HOTPLUG = 0x0001,
+    HID_ACCESS = 0x0100,
+    SUPPORTS_DETACH_KERNEL_DRIVER = 0x0101,
+};

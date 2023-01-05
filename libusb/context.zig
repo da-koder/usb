@@ -16,10 +16,8 @@ const std = @import("std");
 
 const Device = @import("device.zig").Device;
 const DeviceHandle = @import("devicehandle.zig").DeviceHandle;
-
-inline fn toError(err: c_int) anyerror{
-    return @intToError(@bitCast(u16, @truncate(i16, err)));
-}
+const Capability = @import("enums.zig").Capability;
+const toError = @import("errors.zig").toError;
 
 const DeviceArray = [*]*Device;
 
@@ -30,7 +28,7 @@ pub const Context = opaque {
         var optional_ctx: ?*Context = undefined;
         var res = libusb_init (&optional_ctx);
         if (optional_ctx) |ctx|
-            return if (res < 0) toError(-res) else ctx
+            return if (res < 0) toError(res) else ctx
         else 
             return error.NULL_CONTEXT;
    }
@@ -62,7 +60,7 @@ pub const Context = opaque {
     // pub fn wrapSysDevice(ctx: *Context, sys_dev: isize) !void {
     //     var hdl: [*c]?DeviceHandle = undefined;
     //     var res = libusb_wrap_sys_device(ctx, sys_dev, hdl);
-    //     return if (res < 0) toError(-res) else res;
+    //     return if (res < 0) toError(res) else res;
     // }
     
     pub fn openDeviceWithVidPid(ctx: *Context, vendor_id: u16, product_id: u16) !*DeviceHandle {
@@ -108,38 +106,38 @@ pub const Context = opaque {
 //     extern fn libusb_wait_for_event(ctx: *Context, tv: [*c]struct_timeval) c_int
     pub fn waitForEvent(ctx: *Context, tv: ?*struct_timeval) !bool { // Is it a timeout.
         var res = libusb_wait_for_event(ctx, tv);
-        return if (res < 0) toError(-res)
+        return if (res < 0) toError(res)
             else if (res == 0) false else true;
     }
 
 //     extern fn libusb_handle_events_timeout(ctx: *Context, tv: [*c]struct_timeval) c_int
     pub fn handleEventsTimeout(ctx: *Context, tv: ?*struct_timeval) !void {
         var res = libusb_handle_events_timeout(ctx, tv);
-        return if ( res < 0 ) toError(-res);
+        return if ( res < 0 ) toError(res);
     }
 
 //     extern fn libusb_handle_events_timeout_completed(ctx: *Context, tv: [*c]struct_timeval, completed: [*c]c_int) c_int
     pub fn handleEventsTimeoutCompleted(ctx: *Context, tv: ?*struct_timeval, completed: [*c]c_int) !void {
         var res = libusb_handle_events_timeout_completed(ctx, tv, completed);
-        return if ( res < 0 ) toError(-res);
+        return if ( res < 0 ) toError(res);
     }
 
 //     extern fn libusb_handle_events(ctx: *Context) c_int
     pub fn handleEvents(ctx: *Context) !void {
         var res = libusb_handle_events(ctx);
-        return if ( res < 0 ) toError(-res);
+        return if ( res < 0 ) toError(res);
     }
 
 //     extern fn libusb_handle_events_completed(ctx: *Context, completed: [*c]c_int) c_int
     pub fn handleEventsCompleted(ctx: *Context, completed: [*c]c_int) !void {
         var res = libusb_handle_events_completed(ctx, completed);
-        return if ( res < 0 ) toError(-res);
+        return if ( res < 0 ) toError(res);
     }
 
 //     extern fn libusb_handle_events_locked(ctx: *Context, tv: [*c]struct_timeval) c_int
     pub fn handleEventsLocked(ctx: *Context, tv: ?*struct_timeval) !void {
         var res = libusb_handle_events_locked(ctx, tv);
-        return if ( res < 0 ) toError(-res);
+        return if ( res < 0 ) toError(res);
     }
 
 //     extern fn libusb_pollfds_handle_timeouts(ctx: *Context) c_int
@@ -151,7 +149,7 @@ pub const Context = opaque {
 //     extern fn libusb_get_next_timeout(ctx: *Context, tv: [*c]struct_timeval) c_int
     pub fn getNextTimeout(ctx: *Context, tv: ?*struct_timeval) !bool { //Is there a timeout pending.
         var res = libusb_get_next_timeout(ctx, tv);
-        return if (res < 0) toError(-res)
+        return if (res < 0) toError(res)
             else if (res == 0) false else true;
     }
 
@@ -166,7 +164,7 @@ pub const Context = opaque {
 //     extern fn libusb_hotplug_register_callback(ctx: *Context, events: Hotplug.Event, flags: Hotplug.Flag, vendor_id: c_int, product_id: c_int, dev_class: c_int, cb_fn: libusb_hotplug_callback_fn, user_data: ?*anyopaque, callback_handle: [*c]Hotplug.CallBack.Handle) c_int
     pub fn hotplugRegisterCallback(ctx: *Context, events: Hotplug.Event, flags: Hotplug.Flag, vendor_id: c_int, product_id: c_int, dev_class: c_int, cb_fn: Hotplug.CallBack.Fn, user_data: ?*anyopaque, callback_handle: [*c]Hotplug.CallBack.Handle) !void {
         var res = libusb_hotplug_register_callback(ctx, events, flags, vendor_id, product_id, dev_class, cb_fn, user_data, callback_handle);
-        return if ( res < 0 ) toError(-res);
+        return if ( res < 0 ) toError(res);
     }
 
 //     extern fn libusb_hotplug_deregister_callback(ctx: *Context, callback_handle: Hotplug.CallBack.Handle) void
@@ -179,7 +177,7 @@ pub const Context = opaque {
             .NO_DEVICE_DISCOVERY => libusb_set_option(ctx, option),
             else => -1,
         };
-        return if ( res < 0 ) toError(-res); }
+        return if ( res < 0 ) toError(res); }
 
 };
 
@@ -239,7 +237,13 @@ pub const PollFd = extern struct {
 
 };
 
+pub fn hasCapability(cap: Capability) bool {
+    return if ( libusb_has_capability(cap) == 0 ) false else true;
+}
+
 extern fn libusb_init(*?*Context) c_int;
+
+extern fn libusb_has_capability( Capability ) c_int;
 
 extern fn libusb_exit(*Context) void;
 

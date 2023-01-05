@@ -11,12 +11,19 @@ pub const Endpoint = extern struct {
         reserved: u3,
         direction: Endpoint.Direction,
     };
+
+    pub const Attributes = packed struct {
+        transferType: enums.TransferType,
+        syncType: enums.IsoSyncType,
+        usageType: enums.IsoUsageType,
+        reserved: u2,
+    };
     
     pub const Descriptor = extern struct {
         bLength: u8,
         bDescriptorType: enums.Descriptor.Type,
         bEndpointAddress: Address,
-        bmAttributes: u8,
+        bmAttributes: Endpoint.Attributes,
         wMaxPacketSize: u16,
         bInterval: u8,
         bRefresh: u8,
@@ -32,3 +39,12 @@ pub const Endpoint = extern struct {
         wBytesPerInterval: u16,
     };
 };
+
+const std = @import("std");
+const expect = std.testing.expect;
+
+test "sizes" {
+    try expect( @offsetOf(Endpoint.Descriptor,"bDescriptorType") == 1 );
+    try expect( @offsetOf(Endpoint.Descriptor, "bEndpointAddress") == 2 );
+    try expect( @sizeOf(Endpoint.Address) == 1 );
+}
